@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 
+const API_URL = import.meta.env.VITE_API_URL
+
 function App() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -8,12 +10,10 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem('access_token'))
 
   const [products, setProducts] = useState([])
-
   const [productName, setProductName] = useState('')
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
   const [quantity, setQuantity] = useState('')
-
   const [editingId, setEditingId] = useState(null)
 
   const handleLogin = async (e) => {
@@ -21,15 +21,15 @@ function App() {
     setMessage('')
 
     try {
-      const response = await fetch('/login', {
+      const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           username,
-          password
-        })
+          password,
+        }),
       })
 
       const data = await response.json()
@@ -49,10 +49,10 @@ function App() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('/api/products', {
+      const response = await fetch(`${API_URL}/api/products`, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
 
       const data = await response.json()
@@ -83,25 +83,25 @@ function App() {
 
     const productData = {
       product_name: productName,
-      description: description,
+      description,
       price: Number(price),
-      quantity: Number(quantity)
+      quantity: Number(quantity),
     }
 
     try {
       const url = editingId
-        ? `/api/products/${editingId}`
-        : '/api/products'
+        ? `${API_URL}/api/products/${editingId}`
+        : `${API_URL}/api/products`
 
       const method = editingId ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
-        method: method,
+        method,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(productData)
+        body: JSON.stringify(productData),
       })
 
       const data = await response.json()
@@ -127,7 +127,7 @@ function App() {
   const handleEdit = (product) => {
     setEditingId(product.id)
     setProductName(product.product_name)
-    setDescription(product.description)
+    setDescription(product.description || '')
     setPrice(product.price)
     setQuantity(product.quantity)
   }
@@ -137,17 +137,18 @@ function App() {
       'Are you sure you want to delete this product?'
     )
 
-    if (!confirmDelete) {
-      return
-    }
+    if (!confirmDelete) return
 
     try {
-      const response = await fetch(`/api/products/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
+      const response = await fetch(
+        `${API_URL}/api/products/${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      })
+      )
 
       const data = await response.json()
 
@@ -157,7 +158,6 @@ function App() {
       }
 
       alert('Product deleted successfully.')
-
       fetchProducts()
     } catch (error) {
       alert('Cannot connect to the API.')
@@ -215,11 +215,7 @@ function App() {
             <button type="submit">Login</button>
           </form>
 
-          {message && (
-            <p className="message">
-              {message}
-            </p>
-          )}
+          {message && <p className="message">{message}</p>}
         </div>
       </div>
     )
@@ -227,7 +223,6 @@ function App() {
 
   return (
     <div className="dashboard">
-
       <div className="dashboard-header">
         <div>
           <h1>Product Management System</h1>
@@ -243,80 +238,57 @@ function App() {
       </div>
 
       <div className="product-form-card">
-
-        <h2>
-          {editingId
-            ? 'Edit Product'
-            : 'Add Product'}
-        </h2>
+        <h2>{editingId ? 'Edit Product' : 'Add Product'}</h2>
 
         <form onSubmit={handleSubmitProduct}>
-
           <div className="form-grid">
-
             <div className="form-group">
               <label>Product Name</label>
-
               <input
                 type="text"
                 value={productName}
-                onChange={(e) =>
-                  setProductName(e.target.value)
-                }
+                onChange={(e) => setProductName(e.target.value)}
                 required
               />
             </div>
 
             <div className="form-group">
               <label>Description</label>
-
               <input
                 type="text"
                 value={description}
-                onChange={(e) =>
-                  setDescription(e.target.value)
-                }
+                onChange={(e) => setDescription(e.target.value)}
               />
             </div>
 
             <div className="form-group">
               <label>Price</label>
-
               <input
                 type="number"
                 step="0.01"
                 value={price}
-                onChange={(e) =>
-                  setPrice(e.target.value)
-                }
+                onChange={(e) => setPrice(e.target.value)}
                 required
               />
             </div>
 
             <div className="form-group">
               <label>Quantity</label>
-
               <input
                 type="number"
                 value={quantity}
-                onChange={(e) =>
-                  setQuantity(e.target.value)
-                }
+                onChange={(e) => setQuantity(e.target.value)}
                 required
               />
             </div>
-
           </div>
 
           <div className="form-buttons">
-
             <button
               type="submit"
               className="save-btn"
             >
-              {editingId
-                ? 'Update Product'
-                : 'Add Product'}
+              {editingId ? 'Update Product' : 'Add Product'}
             </button>
 
             {editingId && (
@@ -328,23 +300,17 @@ function App() {
                 Cancel
               </button>
             )}
-
           </div>
-
         </form>
-
       </div>
 
       <div className="product-card">
-
         <h2>Product List</h2>
 
         {products.length === 0 ? (
           <p>No products available.</p>
         ) : (
-
           <table>
-
             <thead>
               <tr>
                 <th>ID</th>
@@ -357,65 +323,35 @@ function App() {
             </thead>
 
             <tbody>
-
               {products.map((product) => (
-
                 <tr key={product.id}>
+                  <td>{product.id}</td>
+                  <td>{product.product_name}</td>
+                  <td>{product.description}</td>
+                  <td>₱{product.price}</td>
+                  <td>{product.quantity}</td>
 
                   <td>
-                    {product.id}
-                  </td>
-
-                  <td>
-                    {product.product_name}
-                  </td>
-
-                  <td>
-                    {product.description}
-                  </td>
-
-                  <td>
-                    ₱{product.price}
-                  </td>
-
-                  <td>
-                    {product.quantity}
-                  </td>
-
-                  <td>
-
                     <button
                       className="edit-btn"
-                      onClick={() =>
-                        handleEdit(product)
-                      }
+                      onClick={() => handleEdit(product)}
                     >
                       Edit
                     </button>
 
                     <button
                       className="delete-btn"
-                      onClick={() =>
-                        handleDelete(product.id)
-                      }
+                      onClick={() => handleDelete(product.id)}
                     >
                       Delete
                     </button>
-
                   </td>
-
                 </tr>
-
               ))}
-
             </tbody>
-
           </table>
-
         )}
-
       </div>
-
     </div>
   )
 }
